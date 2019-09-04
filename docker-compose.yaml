@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 services:
 
   metrics:
@@ -17,6 +17,8 @@ services:
 #    - GRAPHITE_HOST=localhost
 #    - GRAPHITE_PREFIX=prefix
 #    - COMPLIANCE_PREFIX=compliance.
+#    - SCC_ORG_ID=123321123
+#    - SCC_SOURCES_REGEX=RedLock|Forseti
 #    - DEBUG=true
 
   # for testing metrics

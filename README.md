@@ -19,9 +19,11 @@ docker-compose run metrics --help
 | prisma_api_url          | PRISMA_API_URL          | https://api.eu.prismacloud.io | Prisma API key                   |
 | prisma_api_key          | PRISMA_API_KEY          |                          | Prisma API key                        |
 | prisma_api_password     | PRISMA_API_PASSWORD     |                          | Prisma API password                   |
+| scc_org_id              | SCC_ORG_ID              |                          | Google SCC numeric organisation ID    |
+| scc_sources_regex       | SCC_SOURCES_REGEX       | `.`                      | Google SCC sources Display Name filter regexp |
 | graphite_host           | GRAPHITE_HOST           |                          | Graphite hostname                     |
 | graphite_port           | GRAPHITE_PORT           | `2003`                   | Graphite port                         |
-| graphite_prefix         | GRAPHITE_PREFIX         |                          | Graphite port                         |
+| graphite_prefix         | GRAPHITE_PREFIX         |                          | Graphite metrics prefix               |
 | compliance_prefix       | COMPLIANCE_PREFIX       | `compliance.`            | Graphite compliance metrics prefix    |
 | dbg                     | DEBUG                   | `false`                  | debug mode                            |
 
@@ -34,6 +36,9 @@ Collected metrics list:
   - API health status ([SLA](https://www.paloaltonetworks.com/resources/datasheets/prisma-public-cloud-service-level-agreement))
 - [Google Security Command Center](https://cloud.google.com/security-command-center/):
   - [health status](https://status.cloud.google.com/)
+  - specified sources newest event update time (for monitoring [Forseti](https://forsetisecurity.org/) alerting delay).
+  In order to collect this data, you need to specify `scc_org_id` and 
+  have [proper credentials](https://cloud.google.com/docs/authentication/production) set up.
 
 Supported exporters list:
 

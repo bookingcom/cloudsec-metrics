@@ -1,4 +1,5 @@
 // Copyright 2019 Booking.com
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +16,19 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
+
+	securitycenter "cloud.google.com/go/securitycenter/apiv1"
+	"github.com/pkg/errors"
+	"google.golang.org/api/iterator"
+	securitycenterpb "google.golang.org/genproto/googleapis/cloud/securitycenter/v1"
 )
 
 type googleStatusEntry struct {
@@ -62,4 +71,69 @@ func GetSCCHealthStatus(url string) int {
 		}
 	}
 	return 1
+}
+
+// GetSCCSourcesByName returns Security Command Center sources for given numeric orgID,
+// filtered by name by given regex
+// original: https://github.com/GoogleCloudPlatform/golang-samples/blob/master/securitycenter/findings/list_sources.go
+func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, error) {
+	regex, err := regexp.Compile(nameRegex)
+	if err != nil {
+		return nil, errors.Wrap(err, "error compiling nameRegex")
+	}
+	// Instantiate a context and a security service client to make API calls.
+	ctx := context.Background()
+	client, err := securitycenter.NewClient(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "securitycenter.NewClient")
+	}
+	defer client.Close() // Closing the client safely cleans up background resources.
+
+	req := &securitycenterpb.ListSourcesRequest{
+		Parent: fmt.Sprintf("organizations/%s", orgID),
+	}
+	it := client.ListSources(ctx, req)
+	result := map[string]string{}
+	for {
+		source, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, errors.Wrap(err, "it.Next")
+		}
+
+		if match := regex.MatchString(source.DisplayName); match {
+			result[source.Name] = source.DisplayName
+		}
+	}
+	return result, nil
+}
+
+// GetSCCLatestEventTime return map of sources and their latest event update time difference with now
+// original: https://github.com/GoogleCloudPlatform/golang-samples/blob/master/securitycenter/findings/list_filtered_findings.go
+func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration, error) {
+	result := make(map[string]time.Duration)
+	ctx := context.Background()
+	client, err := securitycenter.NewClient(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "securitycenter.NewClient")
+	}
+	defer client.Close() // Closing the client safely cleans up background resources.
+
+	for id, name := range sources {
+		req := &securitycenterpb.ListFindingsRequest{
+			Parent:   id,
+			OrderBy:  `event_time desc`,
+			PageSize: 1,
+		}
+		it := client.ListFindings(ctx, req)
+		findingsResult, err := it.Next()
+		if err != nil {
+			continue
+		}
+		finding := findingsResult.Finding
+		result[name] = time.Since(time.Unix(finding.EventTime.Seconds, int64(finding.EventTime.Nanos)))
+	}
+	return result, nil
 }
