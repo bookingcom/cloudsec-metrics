@@ -1,0 +1,28 @@
+version: '3'
+services:
+
+  metrics:
+    build: .
+    image: paskal/cloudsec-metrics:latest
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    environment:
+    - PRISMA_API_KEY=
+    - PRISMA_API_PASSWORD=
+#    - GRAPHITE_HOST=localhost
+#    - GRAPHITE_PREFIX=prefix
+#    - COMPLIANCE_PREFIX=compliance.
+#    - DEBUG=true
+
+  # for testing metrics
+  # use metrics.host=host.docker.internal under Docker for Mac\Windows
+  graphite:
+    image: graphiteapp/graphite-statsd
+    ports:
+    - "80:80"
+    - "2003-2004:2003-2004"
