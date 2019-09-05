@@ -121,6 +121,7 @@ func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration,
 	}
 	defer client.Close() // Closing the client safely cleans up background resources.
 
+	// process just one event with newest update date for every given source
 	for id, name := range sources {
 		req := &securitycenterpb.ListFindingsRequest{
 			Parent:   id,

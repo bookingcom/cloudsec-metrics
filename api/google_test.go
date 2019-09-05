@@ -78,3 +78,18 @@ func TestGetSCCHealthStatus(t *testing.T) {
 		assert.Equal(t, x.status, status, "Test case %d status check failed", i)
 	}
 }
+
+func TestGetSCCLatestEventTime(t *testing.T) {
+	x, err := GetSCCLatestEventTime(nil)
+	assert.Nil(t, x)
+	assert.Error(t, err, "no authentication present should result in error")
+}
+
+func TestGetSCCSourcesByName(t *testing.T) {
+	x, err := GetSCCSourcesByName("", "bad_regex(")
+	assert.Nil(t, x)
+	assert.EqualError(t, err, "error compiling nameRegex: error parsing regexp: missing closing ): `bad_regex(`")
+	x, err = GetSCCSourcesByName("", "")
+	assert.Nil(t, x)
+	assert.Error(t, err, "no authentication present should result in error")
+}
