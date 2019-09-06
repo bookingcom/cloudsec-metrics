@@ -38,6 +38,9 @@ type googleStatusEntry struct {
 	EndDate     time.Time `json:"end"`
 }
 
+// Google SCC API operations timeout
+const apiTimeout = time.Second * 20
+
 // GetSCCHealthStatus gets Google Security Command Center health information and returns 1 on healthy response, 0 otherwise
 // Check is performed by fetching list of incidents from Google Cloud Status Dashboard
 // and checking if there are ongoing incidents with cloud-security-command-center;
@@ -82,7 +85,7 @@ func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, err
 		return nil, errors.Wrap(err, "error compiling nameRegex")
 	}
 	// Instantiate a context and a security service client to make API calls.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*20)
+	ctx, _ := context.WithTimeout(context.Background(), apiTimeout)
 	client, err := securitycenter.NewClient(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "securitycenter.NewClient")
@@ -114,7 +117,7 @@ func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, err
 // original: https://github.com/GoogleCloudPlatform/golang-samples/blob/master/securitycenter/findings/list_filtered_findings.go
 func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration, error) {
 	result := make(map[string]time.Duration)
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*20)
+	ctx, _ := context.WithTimeout(context.Background(), apiTimeout)
 	client, err := securitycenter.NewClient(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "securitycenter.NewClient")
