@@ -85,7 +85,8 @@ func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, err
 		return nil, errors.Wrap(err, "error compiling nameRegex")
 	}
 	// Instantiate a context and a security service client to make API calls.
-	ctx, _ := context.WithTimeout(context.Background(), apiTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
+	defer cancel()
 	client, err := securitycenter.NewClient(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "securitycenter.NewClient")
@@ -117,7 +118,8 @@ func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, err
 // original: https://github.com/GoogleCloudPlatform/golang-samples/blob/master/securitycenter/findings/list_filtered_findings.go
 func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration, error) {
 	result := make(map[string]time.Duration)
-	ctx, _ := context.WithTimeout(context.Background(), apiTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
+	defer cancel()
 	client, err := securitycenter.NewClient(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "securitycenter.NewClient")
@@ -132,9 +134,13 @@ func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration,
 			PageSize: 1,
 		}
 		it := client.ListFindings(ctx, req)
+		// we are getting first page with single element and discard other results
 		findingsResult, err := it.Next()
-		if err != nil {
+		if err == iterator.Done {
 			continue
+		}
+		if err != nil {
+			return nil, errors.Wrap(err, "it.Next")
 		}
 		finding := findingsResult.Finding
 		result[name] = time.Since(time.Unix(finding.EventTime.Seconds, int64(finding.EventTime.Nanos)))
