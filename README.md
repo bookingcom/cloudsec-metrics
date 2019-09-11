@@ -23,7 +23,7 @@ docker-compose run metrics --help
 | scc_sources_regex       | SCC_SOURCES_REGEX       | `.`                      | Google SCC sources Display Name filter regexp |
 | graphite_host           | GRAPHITE_HOST           |                          | Graphite hostname                     |
 | graphite_port           | GRAPHITE_PORT           | `2003`                   | Graphite port                         |
-| graphite_prefix         | GRAPHITE_PREFIX         |                          | Graphite metrics prefix               |
+| graphite_prefix         | GRAPHITE_PREFIX         |                          | Global Graphite metrics prefix, applied to everything |
 | compliance_prefix       | COMPLIANCE_PREFIX       | `compliance.`            | Graphite compliance metrics prefix    |
 | dbg                     | DEBUG                   | `false`                  | debug mode                            |
 
@@ -36,7 +36,7 @@ Collected metrics list:
   - API health status ([SLA](https://www.paloaltonetworks.com/resources/datasheets/prisma-public-cloud-service-level-agreement))
 - [Google Security Command Center](https://cloud.google.com/security-command-center/):
   - [health status](https://status.cloud.google.com/)
-  - specified sources newest event update time (for monitoring [Forseti](https://forsetisecurity.org/) alerting delay).
+  - newest event update time per source (for monitoring [Forseti](https://forsetisecurity.org/) alerting delay).
   In order to collect this data, you need to specify `scc_org_id` and 
   have [proper credentials](https://cloud.google.com/docs/authentication/production) set up.
 
