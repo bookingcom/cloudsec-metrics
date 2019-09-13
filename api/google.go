@@ -103,7 +103,7 @@ func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, err
 			break
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, "it.Next")
+			return nil, errors.Wrap(err, "sources iterator problem")
 		}
 
 		if match := regex.MatchString(source.DisplayName); match {
@@ -139,7 +139,7 @@ func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration,
 			continue
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, "it.Next")
+			return nil, errors.Wrap(err, "events iterator problem")
 		}
 		finding := findingsResult.Finding
 		result[name] = time.Since(time.Unix(finding.EventTime.Seconds, int64(finding.EventTime.Nanos)))
