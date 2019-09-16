@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetGoogleSCCHealthStatus(t *testing.T) {
+func TestGetSCCHealthStatus(t *testing.T) {
 	endedEventServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.URL.Path, "/incidents.json")
 		assert.Equal(t, "GET", r.Method)
@@ -77,5 +77,19 @@ func TestGetGoogleSCCHealthStatus(t *testing.T) {
 		status := GetSCCHealthStatus(x.serverURL)
 		assert.Equal(t, x.status, status, "Test case %d status check failed", i)
 	}
+}
 
+func TestGetSCC_BadEnvFailure(t *testing.T) {
+	x, err := GetSCCLatestEventTime(nil)
+	assert.Nil(t, x)
+	assert.Error(t, err, "no authentication present should result in error")
+	y, err := GetSCCSourcesByName("", "")
+	assert.Nil(t, y)
+	assert.Error(t, err, "no authentication present should result in error")
+}
+
+func TestGetSCCSourcesByName_BadRegexp(t *testing.T) {
+	x, err := GetSCCSourcesByName("", "bad_regex(")
+	assert.Nil(t, x)
+	assert.EqualError(t, err, "error compiling nameRegex: error parsing regexp: missing closing ): `bad_regex(`")
 }

@@ -17,6 +17,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
 	"github.com/bookingcom/cloudsec-metrics/graphite"
@@ -32,6 +33,8 @@ func main() {
 		GraphitePort     int    `long:"graphite_port" env:"GRAPHITE_PORT" default:"2003" description:"Graphite port"`
 		GraphitePrefix   string `long:"graphite_prefix" env:"GRAPHITE_PREFIX" description:"Graphite global prefix"`
 		CompliancePrefix string `long:"compliance_prefix" env:"COMPLIANCE_PREFIX" default:"compliance." description:"Graphite compliance metrics prefix"`
+		SCCOrgID         string `long:"scc_org_id" env:"SCC_ORG_ID" description:"Google SCC numeric organisation ID"`
+		SCCSourcesRegex  string `long:"scc_sources_regex" env:"SCC_SOURCES_REGEX" default:"." description:"Google SCC sources Display Name regexp"`
 		Dbg              bool   `long:"dbg" env:"DEBUG" description:"debug mode"`
 	}
 
@@ -46,6 +49,7 @@ func main() {
 
 	var collectedMetrics struct {
 		complianceInfo        []api.ComplianceInfo
+		googleSourcesDelay    map[string]time.Duration
 		prismaHealthStatus    int
 		googleSCCHealthStatus int
 	}
@@ -67,5 +71,14 @@ func main() {
 	Graphite := graphite.New(opts.GraphiteHost, opts.GraphitePort, opts.GraphitePrefix)
 	if err := graphite.SendComplianceInfo(Graphite, opts.CompliancePrefix, collectedMetrics.complianceInfo); err != nil {
 		log.Printf("[ERROR] Can't send complience information, %v", err)
+	}
+	if opts.SCCOrgID != "" {
+		sccSources, err := api.GetSCCSourcesByName(opts.SCCOrgID, opts.SCCSourcesRegex)
+		if err != nil {
+			log.Fatalf("[ERROR] Can't get SCC sources information, %v", err)
+		}
+		if collectedMetrics.googleSourcesDelay, err = api.GetSCCLatestEventTime(sccSources); err != nil {
+			log.Printf("[ERROR] Can't get SCC sources last update information, %v", err)
+		}
 	}
 }

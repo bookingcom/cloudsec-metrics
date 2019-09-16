@@ -188,7 +188,7 @@ func TestPrisma_GatherComplianceInfo(t *testing.T) {
 	}
 }
 
-func TestPrisma_GatherHealthStatus(t *testing.T) {
+func TestPrisma_GetAPIHealthStatus(t *testing.T) {
 	// prepare servers
 	goodServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/check", r.URL.Path)
