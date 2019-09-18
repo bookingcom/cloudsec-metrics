@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
+	"github.com/marpaia/graphite-golang"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,19 +27,18 @@ func TestGraphite(t *testing.T) {
 		host                   string
 		port                   int
 		prefix, expectedPrefix string
+		nilReturn              bool
 	}{
-		{},
-		{host: "bad_host", prefix: "some_prefix"},
+		{nilReturn: true},
+		{host: "bad_host"},
 	}
 
 	for i, x := range testDataset {
-		g := New(x.host, x.port, x.prefix)
-		assert.Equal(t, x.host, g.Host, "Test case %d host check failed", i)
-		assert.Equal(t, x.port, g.Port, "Test case %d port check failed", i)
-		assert.Equal(t, x.expectedPrefix, g.Prefix, "Test case %d prefix check failed", i)
+		g, err := New(x.host, x.port, x.prefix)
+		assert.Error(t, err, "Test case %d error check failed", i)
+		assert.Nil(t, g, "Test case %d nil object check failed", i)
 	}
 
-	g := New("", 0, "")
-	assert.NoError(t, SendComplianceInfo(g, "", nil), "Empty metric send should do nothing and return no errors")
-	assert.NoError(t, SendComplianceInfo(g, "", []api.ComplianceInfo{{Name: "test_name"}}), "Empty metric send should do nothing and return no errors")
+	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", nil), "Empty metric send should do nothing and return no errors")
+	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", []api.ComplianceInfo{{Name: "test{name}"}}), "Empty metric send should do nothing and return no errors")
 }
