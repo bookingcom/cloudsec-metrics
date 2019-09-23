@@ -17,6 +17,7 @@ package main
 import (
 	"testing"
 
+	"github.com/bookingcom/cloudsec-metrics/api"
 	"github.com/marpaia/graphite-golang"
 	"github.com/stretchr/testify/assert"
 )
@@ -58,7 +59,7 @@ func TestCollectMetrics(t *testing.T) {
 }
 
 func TestSendMetrics(t *testing.T) {
-	m := metrics{}
+	m := metrics{complianceInfo: []api.ComplianceInfo{}}
 	sendMetrics(&m, &senders{graphite: &graphite.Graphite{}}, opts{})
-	assert.Equal(t, metrics{}, m, "Metrics unchanged after send function call")
+	assert.Equal(t, metrics{complianceInfo: []api.ComplianceInfo{}}, m, "Metrics unchanged after send function call")
 }

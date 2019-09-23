@@ -24,31 +24,26 @@ import (
 )
 
 func TestGraphite(t *testing.T) {
-	var testDataset = []struct {
-		host                   string
-		port                   int
-		prefix, expectedPrefix string
-		nilReturn              bool
-	}{
-		{nilReturn: true},
-		{host: "bad_host"},
-	}
-
-	for i, x := range testDataset {
-		g, err := New(x.host, x.port, x.prefix)
-		assert.Error(t, err, "Test case %d error check failed", i)
-		assert.Nil(t, g, "Test case %d nil object check failed", i)
-	}
-
-	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", nil),
-		"Empty metric send should do nothing and return no errors")
-	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", []api.ComplianceInfo{{Name: "test{name}"}}),
+	assert.Nil(t, GenerateComplianceInfo(0, "", nil),
+		"Run with no metrics should return nil")
+	assert.Equal(t,
+		[]graphite.Metric{
+			{Name: "test_name_.policies_total", Value: "1", Timestamp: 0},
+			{Name: "test_name_.assets_passed", Value: "2", Timestamp: 0},
+			{Name: "test_name_.assets_failed", Value: "3", Timestamp: 0},
+			{Name: "test_name_.assets_total", Value: "4", Timestamp: 0}},
+		GenerateComplianceInfo(0, "", []api.ComplianceInfo{
+			{Name: "test{name}",
+				PoliciesCount:     1,
+				PassedAssetsCount: 2,
+				FailedAssetsCount: 3,
+				TotalAssetsCount:  4}}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
-	assert.NoError(t, SendSSCSourcesDelay(&graphite.Graphite{}, "", nil),
-		"Empty metric send should do nothing and return no errors")
-	assert.NoError(t, SendSSCSourcesDelay(&graphite.Graphite{}, "", map[string]time.Duration{"test": time.Second}),
+	assert.Nil(t, GenerateSSCSourcesDelay(0, "", nil),
+		"Run with no metrics should return nil")
+	assert.Equal(t,
+		[]graphite.Metric{{Name: "test.policies_total", Value: "0.065000", Timestamp: 0}},
+		GenerateSSCSourcesDelay(0, "", map[string]time.Duration{"test": time.Millisecond * 65}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
-	assert.NoError(t, SendMetric(&graphite.Graphite{}, "", ""),
-		"Single metric send should do nothing and return no errors")
 	assert.Equal(t, "_test_of_metric", escapeMetricName("(test)of/metric"))
 }
