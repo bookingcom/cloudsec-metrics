@@ -16,6 +16,7 @@ package graphite
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
 	"github.com/marpaia/graphite-golang"
@@ -39,6 +40,15 @@ func TestGraphite(t *testing.T) {
 		assert.Nil(t, g, "Test case %d nil object check failed", i)
 	}
 
-	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", nil), "Empty metric send should do nothing and return no errors")
-	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", []api.ComplianceInfo{{Name: "test{name}"}}), "Empty metric send should do nothing and return no errors")
+	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", nil),
+		"Empty metric send should do nothing and return no errors")
+	assert.NoError(t, SendComplianceInfo(&graphite.Graphite{}, "", []api.ComplianceInfo{{Name: "test{name}"}}),
+		"Single metric send to empty Graphite should do nothing and return no errors")
+	assert.NoError(t, SendSSCSourcesDelay(&graphite.Graphite{}, "", nil),
+		"Empty metric send should do nothing and return no errors")
+	assert.NoError(t, SendSSCSourcesDelay(&graphite.Graphite{}, "", map[string]time.Duration{"test": time.Second}),
+		"Single metric send to empty Graphite should do nothing and return no errors")
+	assert.NoError(t, SendMetric(&graphite.Graphite{}, "", ""),
+		"Single metric send should do nothing and return no errors")
+	assert.Equal(t, "_test_of_metric", escapeMetricName("(test)of/metric"))
 }

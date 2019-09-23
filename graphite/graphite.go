@@ -15,6 +15,7 @@
 package graphite
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -32,24 +33,47 @@ func New(host string, port int, prefix string) (G *graphite.Graphite, err error)
 	return G, nil
 }
 
-// SendComplianceInfo tries to get assets compliance information for last day, thread-safe
+// SendComplianceInfo tries to send assets compliance information to graphite
 func SendComplianceInfo(g *graphite.Graphite, prefix string, ci []api.ComplianceInfo) error {
 	timeNow := time.Now().Unix()
 	var metrics []graphite.Metric
 	for _, x := range ci {
-		metricPrefix := prefix
-		for _, c := range x.Name {
-			switch c {
-			case ' ', '.', '{', '}', '(', ')', '/':
-				metricPrefix += "_"
-			default:
-				metricPrefix += string(c)
-			}
-		}
+		metricPrefix := escapeMetricName(prefix + x.Name)
 		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", strconv.Itoa(x.PoliciesCount), timeNow))
 		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_passed", strconv.Itoa(x.PassedAssetsCount), timeNow))
 		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_failed", strconv.Itoa(x.FailedAssetsCount), timeNow))
 		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_total", strconv.Itoa(x.TotalAssetsCount), timeNow))
 	}
 	return g.SendMetrics(metrics)
+}
+
+// SendSSCSourcesDelay tries to send SCC sources delay information to graphite
+func SendSSCSourcesDelay(g *graphite.Graphite, prefix string, delay map[string]time.Duration) error {
+	timeNow := time.Now().Unix()
+	var metrics []graphite.Metric
+	for k, v := range delay {
+		metricPrefix := escapeMetricName(prefix + k)
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", fmt.Sprintf("%f", v.Seconds()), timeNow))
+	}
+	return g.SendMetrics(metrics)
+}
+
+// SendMetric tries to send given metric to graphite
+func SendMetric(g *graphite.Graphite, metric string, value string) error {
+	timeNow := time.Now().Unix()
+	metrics := []graphite.Metric{graphite.NewMetric(escapeMetricName(metric), value, timeNow)}
+	return g.SendMetrics(metrics)
+}
+
+func escapeMetricName(name string) string {
+	result := ""
+	for _, c := range name {
+		switch c {
+		case ' ', '.', '{', '}', '(', ')', '/':
+			result += "_"
+		default:
+			result += string(c)
+		}
+	}
+	return result
 }

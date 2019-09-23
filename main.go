@@ -17,6 +17,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
@@ -27,17 +28,20 @@ import (
 )
 
 type opts struct {
-	CollectPeriod    time.Duration `long:"collect_period" env:"COLLECT_PERIOD" default:"1m" description:"Time between metrics collection"`
-	PrismAPIUrl      string        `long:"prisma_api_url" env:"PRISMA_API_URL" default:"https://api.eu.prismacloud.io" description:"Prisma API URL"`
-	PrismAPIKey      string        `long:"prisma_api_key" env:"PRISMA_API_KEY" description:"Prisma API key"`
-	PrismAPIPassword string        `long:"prisma_api_password" env:"PRISMA_API_PASSWORD" description:"Prisma API password"`
-	GraphiteHost     string        `long:"graphite_host" env:"GRAPHITE_HOST" description:"Graphite hostname"`
-	GraphitePort     int           `long:"graphite_port" env:"GRAPHITE_PORT" default:"2003" description:"Graphite port"`
-	GraphitePrefix   string        `long:"graphite_prefix" env:"GRAPHITE_PREFIX" description:"Graphite global prefix"`
-	CompliancePrefix string        `long:"compliance_prefix" env:"COMPLIANCE_PREFIX" default:"compliance." description:"Graphite compliance metrics prefix"`
-	SCCOrgID         string        `long:"scc_org_id" env:"SCC_ORG_ID" description:"Google SCC numeric organisation ID"`
-	SCCSourcesRegex  string        `long:"scc_sources_regex" env:"SCC_SOURCES_REGEX" default:"." description:"Google SCC sources Display Name regexp"`
-	Dbg              bool          `long:"dbg" env:"DEBUG" description:"debug mode"`
+	CollectPeriod          time.Duration `long:"collect_period" env:"COLLECT_PERIOD" default:"1m" description:"Time between metrics collection"`
+	PrismAPIUrl            string        `long:"prisma_api_url" env:"PRISMA_API_URL" default:"https://api.eu.prismacloud.io" description:"Prisma API URL"`
+	PrismAPIKey            string        `long:"prisma_api_key" env:"PRISMA_API_KEY" description:"Prisma API key"`
+	PrismAPIPassword       string        `long:"prisma_api_password" env:"PRISMA_API_PASSWORD" description:"Prisma API password"`
+	GraphiteHost           string        `long:"graphite_host" env:"GRAPHITE_HOST" description:"Graphite hostname"`
+	GraphitePort           int           `long:"graphite_port" env:"GRAPHITE_PORT" default:"2003" description:"Graphite port"`
+	GraphitePrefix         string        `long:"graphite_prefix" env:"GRAPHITE_PREFIX" description:"Graphite global prefix"`
+	CompliancePrefix       string        `long:"compliance_prefix" env:"COMPLIANCE_PREFIX" default:"compliance." description:"Graphite compliance metrics prefix"`
+	SCCDelayPrefix         string        `long:"scc_delay_prefix" env:"SCC_DELAY_PREFIX" default:"scc_delay." description:"Graphite SCC sources delay metrics prefix"`
+	SCCHealthMetricName    string        `long:"scc_health_metric_name" env:"SCC_HEALTH_METRIC_NAME" default:"scc_health" description:"Graphite SCC health metric name"`
+	PrismaHealthMetricName string        `long:"prisma_health_metric_name" env:"PRISMA_HEALTH_METRIC_NAME" default:"prisma_health" description:"Graphite Prisma health metric name"`
+	SCCOrgID               string        `long:"scc_org_id" env:"SCC_ORG_ID" description:"Google SCC numeric organisation ID"`
+	SCCSourcesRegex        string        `long:"scc_sources_regex" env:"SCC_SOURCES_REGEX" default:"." description:"Google SCC sources Display Name regexp"`
+	Dbg                    bool          `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
 type collectors struct {
@@ -136,11 +140,22 @@ func collectMetrics(metrics *metrics, collectors *collectors, googleHealthDashbo
 	}
 }
 
-// sendMetrics sends metrics to supported senders
+// sendMetrics sends metrics to initialised senders
 func sendMetrics(metrics *metrics, senders *senders, opts opts) {
 	if senders.graphite != nil {
-		if err := graphite.SendComplianceInfo(senders.graphite, opts.CompliancePrefix, metrics.complianceInfo); err != nil {
-			log.Printf("[ERROR] Can't send complience information, %v", err)
+		if metrics.complianceInfo != nil {
+			if err := graphite.SendComplianceInfo(senders.graphite, opts.CompliancePrefix, metrics.complianceInfo); err != nil {
+				log.Printf("[ERROR] Can't send complience information, %v", err)
+			}
+			if err := graphite.SendMetric(senders.graphite, opts.PrismaHealthMetricName, strconv.Itoa(metrics.prismaHealthStatus)); err != nil {
+				log.Printf("[ERROR] Can't send prisma health status information, %v", err)
+			}
+		}
+		if err := graphite.SendSSCSourcesDelay(senders.graphite, opts.SCCDelayPrefix, metrics.googleSourcesDelay); err != nil {
+			log.Printf("[ERROR] Can't send google sources delay information, %v", err)
+		}
+		if err := graphite.SendMetric(senders.graphite, opts.SCCHealthMetricName, strconv.Itoa(metrics.googleSCCHealthStatus)); err != nil {
+			log.Printf("[ERROR] Can't send prisma health status information, %v", err)
 		}
 	}
 }
