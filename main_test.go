@@ -15,17 +15,50 @@
 package main
 
 import (
-	"os"
 	"testing"
-	"time"
 
+	"github.com/marpaia/graphite-golang"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Main(t *testing.T) {
-	os.Args = []string{"", "--dbg"}
+func TestPrepareCollectors(t *testing.T) {
+	var testDataset = []struct {
+		opts       opts
+		err        bool
+		collectors *collectors
+	}{
+		{collectors: &collectors{}},
+		{opts: opts{PrismAPIKey: "bad", PrismAPIPassword: "bad", PrismAPIUrl: "bad_host"}, err: true},
+		{opts: opts{SCCOrgID: "bad"}, err: true},
+	}
+	for i, x := range testDataset {
+		c, err := prepareCollectors(x.opts)
+		if x.err {
+			assert.Error(t, err, "Test case %d error check failed", i)
+		} else {
+			assert.NoError(t, err, "Test case %d error check failed", i)
+		}
+		assert.Equal(t, x.collectors, c, "Test case %d collectors check failed", i)
+	}
+}
 
-	st := time.Now()
-	main()
-	assert.True(t, time.Since(st).Seconds() <= 1, "should take less than 1s")
+func TestPrepareSenders(t *testing.T) {
+	s, err := prepareSenders(opts{})
+	assert.NoError(t, err)
+	assert.Equal(t, &senders{}, s, "No senders initialised without options provided")
+	s, err = prepareSenders(opts{GraphiteHost: "bad_host"})
+	assert.Error(t, err, "Bad Graphite hostname results in error")
+	assert.Nil(t, s, "Bad Graphite hostname results in no senders created")
+}
+
+func TestCollectMetrics(t *testing.T) {
+	m := metrics{}
+	collectMetrics(&m, &collectors{}, "")
+	assert.Equal(t, metrics{}, m, "No data collected without collectors provided")
+}
+
+func TestSendMetrics(t *testing.T) {
+	m := metrics{}
+	sendMetrics(&m, &senders{graphite: &graphite.Graphite{}}, opts{})
+	assert.Equal(t, metrics{}, m, "Metrics unchanged after send function call")
 }

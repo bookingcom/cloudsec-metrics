@@ -15,31 +15,21 @@
 package graphite
 
 import (
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
 	"github.com/marpaia/graphite-golang"
+	"github.com/pkg/errors"
 )
 
-// New is creating new Graphite instance with given parameters,
-// returns dummy Graphite instance in case of empty host argument
-// or in case of connection problems
-func New(host string, port int, prefix string) *graphite.Graphite {
-	var G *graphite.Graphite
-	var err error
-	if host != "" {
-		if G, err = graphite.GraphiteFactory("tcp", host, port, prefix); err != nil {
-			log.Printf("[ERROR] Can't connect to Graphite, %v", err)
-		}
-	}
-	if G == nil {
-		log.Print("[INFO] Creating dummy Graphite connector, no data will be sent")
-		G = graphite.NewGraphiteNop(host, port)
+// New is creating new Graphite instance with given parameters, disabling graphite.Graphite default logging
+func New(host string, port int, prefix string) (G *graphite.Graphite, err error) {
+	if G, err = graphite.GraphiteFactory("tcp", host, port, prefix); err != nil {
+		return nil, errors.Wrap(err, "can't connect to Graphite")
 	}
 	G.DisableLog = true
-	return G
+	return G, nil
 }
 
 // SendComplianceInfo tries to get assets compliance information for last day, thread-safe
