@@ -114,9 +114,10 @@ func prepareSenders(opts opts) (*senders, error) {
 	var err error
 	var senders = &senders{}
 	if opts.GraphiteHost != "" {
-		if senders.graphite, err = graphite.New(opts.GraphiteHost, opts.GraphitePort, opts.GraphitePrefix); err != nil {
+		if senders.graphite, err = g.GraphiteFactory("tcp", opts.GraphiteHost, opts.GraphitePort, opts.GraphitePrefix); err != nil {
 			return nil, errors.Wrap(err, "can't create Graphite")
 		}
+		senders.graphite.DisableLog = true
 	}
 	return senders, nil
 }
@@ -143,19 +144,16 @@ func collectMetrics(metrics *metrics, collectors *collectors, googleHealthDashbo
 // sendMetrics sends metrics to initialised senders
 func sendMetrics(metrics *metrics, senders *senders, opts opts) {
 	if senders.graphite != nil {
+		var graphiteMetrics []g.Metric
+		timeNow := time.Now().Unix()
 		if metrics.complianceInfo != nil {
-			if err := graphite.SendComplianceInfo(senders.graphite, opts.CompliancePrefix, metrics.complianceInfo); err != nil {
-				log.Printf("[ERROR] Can't send complience information, %v", err)
-			}
-			if err := graphite.SendMetric(senders.graphite, opts.PrismaHealthMetricName, strconv.Itoa(metrics.prismaHealthStatus)); err != nil {
-				log.Printf("[ERROR] Can't send prisma health status information, %v", err)
-			}
+			graphiteMetrics = append(graphiteMetrics, graphite.GenerateComplianceInfo(timeNow, opts.CompliancePrefix, metrics.complianceInfo)...)
+			graphiteMetrics = append(graphiteMetrics, g.NewMetric(opts.PrismaHealthMetricName, strconv.Itoa(metrics.prismaHealthStatus), timeNow))
 		}
-		if err := graphite.SendSSCSourcesDelay(senders.graphite, opts.SCCDelayPrefix, metrics.googleSourcesDelay); err != nil {
-			log.Printf("[ERROR] Can't send google sources delay information, %v", err)
-		}
-		if err := graphite.SendMetric(senders.graphite, opts.SCCHealthMetricName, strconv.Itoa(metrics.googleSCCHealthStatus)); err != nil {
-			log.Printf("[ERROR] Can't send prisma health status information, %v", err)
+		graphiteMetrics = append(graphiteMetrics, graphite.GenerateSSCSourcesDelay(timeNow, opts.SCCDelayPrefix, metrics.googleSourcesDelay)...)
+		graphiteMetrics = append(graphiteMetrics, g.NewMetric(opts.SCCHealthMetricName, strconv.Itoa(metrics.googleSCCHealthStatus), timeNow))
+		if err := senders.graphite.SendMetrics(graphiteMetrics); err != nil {
+			log.Printf("[ERROR] Can't send metrics to Graphite, %v", err)
 		}
 	}
 }
