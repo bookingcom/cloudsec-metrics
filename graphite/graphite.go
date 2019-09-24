@@ -26,12 +26,12 @@ import (
 // GenerateComplianceInfo returns metrics from given compliance info
 func GenerateComplianceInfo(timeNow int64, prefix string, ci []api.ComplianceInfo) []graphite.Metric {
 	var metrics []graphite.Metric
-	for _, x := range ci {
-		metricPrefix := prefix + escapeMetricName(x.Name)
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", strconv.Itoa(x.PoliciesCount), timeNow))
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_passed", strconv.Itoa(x.PassedAssetsCount), timeNow))
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_failed", strconv.Itoa(x.FailedAssetsCount), timeNow))
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_total", strconv.Itoa(x.TotalAssetsCount), timeNow))
+	for _, entry := range ci {
+		metricPrefix := prefix + escapeMetricName(entry.Name)
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", strconv.Itoa(entry.PoliciesCount), timeNow))
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_passed", strconv.Itoa(entry.PassedAssetsCount), timeNow))
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_failed", strconv.Itoa(entry.FailedAssetsCount), timeNow))
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_total", strconv.Itoa(entry.TotalAssetsCount), timeNow))
 	}
 	return metrics
 }
@@ -39,9 +39,9 @@ func GenerateComplianceInfo(timeNow int64, prefix string, ci []api.ComplianceInf
 // GenerateSSCSourcesDelay returns metrics from given delay map
 func GenerateSSCSourcesDelay(timeNow int64, prefix string, delay map[string]time.Duration) []graphite.Metric {
 	var metrics []graphite.Metric
-	for k, v := range delay {
-		metricPrefix := prefix + escapeMetricName(k)
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", fmt.Sprintf("%f", v.Seconds()), timeNow))
+	for name, duration := range delay {
+		metricPrefix := prefix + escapeMetricName(name)
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", fmt.Sprintf("%f", duration.Seconds()), timeNow))
 	}
 	return metrics
 }
