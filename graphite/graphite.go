@@ -41,7 +41,7 @@ func GenerateSSCSourcesDelay(timeNow int64, prefix string, delay map[string]time
 	var metrics []graphite.Metric
 	for name, duration := range delay {
 		metricPrefix := prefix + escapeMetricName(name)
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", fmt.Sprintf("%f", duration.Seconds()), timeNow))
+		metrics = append(metrics, graphite.NewMetric(metricPrefix+".seconds", fmt.Sprintf("%f", duration.Seconds()), timeNow))
 	}
 	return metrics
 }
