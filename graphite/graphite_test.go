@@ -42,7 +42,7 @@ func TestGraphite(t *testing.T) {
 	assert.Nil(t, GenerateSSCSourcesDelay(0, "", nil),
 		"Run with no metrics should return nil")
 	assert.Equal(t,
-		[]graphite.Metric{{Name: "test.policies_total", Value: "0.065000", Timestamp: 0}},
+		[]graphite.Metric{{Name: "test.seconds", Value: "0.065000", Timestamp: 0}},
 		GenerateSSCSourcesDelay(0, "", map[string]time.Duration{"test": time.Millisecond * 65}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
 	assert.Equal(t, "_test_of_metric", escapeMetricName("(test)of/metric"))
