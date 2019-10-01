@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -28,8 +29,11 @@ import (
 // Prisma is an object to make API calls to Palo Alto Prisma,
 // authorized requests if proper Token is set
 type Prisma struct {
-	Token  string `json:"token"`
-	APIUrl string
+	Login          string
+	Password       string
+	Token          string `json:"token"`
+	APIUrl         string
+	tokenRenewTime time.Time
 }
 
 // ComplianceInfo store assets compliance information for single policy
@@ -42,26 +46,7 @@ type ComplianceInfo struct {
 	TotalAssetsCount  int
 }
 
-// NewPrisma tries to log to Prisma in with given credentials and returns pointer to Prisma object on success, thread-safe
-// https://api.docs.prismacloud.io/reference#app-login
-func NewPrisma(username, password, apiURL string) (*Prisma, error) {
-	loginData := map[string]string{"username": username, "password": password}
-	jsonValue, err := json.Marshal(loginData)
-	if err != nil {
-		return nil, errors.Wrap(err, "error marshaling login data")
-	}
-	p := &Prisma{APIUrl: apiURL}
-	data, err := p.doAPIRequest("POST", "/login", bytes.NewBuffer(jsonValue))
-	if err != nil {
-		return nil, errors.Wrapf(err, "error logging in with user %q", username)
-	}
-	if err := json.Unmarshal(data, p); err != nil {
-		return nil, errors.Wrap(err, "error obtaining token")
-	}
-	return p, nil
-}
-
-// GatherComplianceInfo get assets compliance information for last day, thread-safe
+// GatherComplianceInfo get assets compliance information for last day
 // https://api.docs.prismacloud.io/reference#get-compliance-dashboard-list
 func (p *Prisma) GatherComplianceInfo() ([]ComplianceInfo, error) {
 	data, err := p.doAPIRequest("GET", "/compliance/dashboard?timeType=to_now&timeUnit=day", nil)
@@ -90,13 +75,18 @@ func (p *Prisma) GetAPIHealthStatus() int {
 	return 1
 }
 
-// doAPIRequest does request to API with specified method and returns response body on success, thread-safe
+// doAPIRequest does request to API with specified method and returns response body on success
 func (p *Prisma) doAPIRequest(method, url string, body io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, p.APIUrl+url, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating request")
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if time.Since(p.tokenRenewTime) > time.Minute*3 {
+		if err := p.authenticate(); err != nil {
+			return nil, errors.Wrap(err, "error getting auth token")
+		}
+	}
 	req.Header.Set("x-redlock-auth", p.Token)
 	httpClient := http.Client{Timeout: time.Second * 5}
 	response, err := httpClient.Do(req)
@@ -112,7 +102,6 @@ func (p *Prisma) doAPIRequest(method, url string, body io.Reader) ([]byte, error
 	case http.StatusOK:
 		return data, nil
 	case http.StatusUnauthorized:
-		// TODO handle token refresh in case it will be long-running
 		return nil, errors.Errorf("authentication error on request, response body: %q", data)
 	case http.StatusBadRequest:
 		return nil, errors.Errorf("bad request parameters, check your request body, response body: %q", data)
@@ -121,4 +110,40 @@ func (p *Prisma) doAPIRequest(method, url string, body io.Reader) ([]byte, error
 	default:
 		return nil, errors.Errorf("%v, response body: %q", response.Status, data)
 	}
+}
+
+// authenticate gets or renews the API authentication token
+// https://api.docs.prismacloud.io/reference#login
+func (p *Prisma) authenticate() error {
+	p.tokenRenewTime = time.Now()
+	switch p.Token {
+	case "":
+		// no token set yet, first login
+		loginData := map[string]string{"username": p.Login, "password": p.Password}
+		jsonValue, err := json.Marshal(loginData)
+		if err != nil {
+			return errors.Wrap(err, "error marshaling login data")
+		}
+		data, err := p.doAPIRequest("POST", "/login", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			return errors.Wrapf(err, "error logging in with user %q", p.Login)
+		}
+		if err := json.Unmarshal(data, p); err != nil {
+			return errors.Wrap(err, "error obtaining token from login response")
+		}
+	default:
+		// token is set and we will try to renew it
+		data, err := p.doAPIRequest("GET", "/auth_token/extend", nil)
+		if err != nil {
+			log.Printf("[INFO] Error extending token, will re-login, %v", err)
+			p.Token = ""
+			return p.authenticate()
+		}
+		if err := json.Unmarshal(data, p); err != nil {
+			log.Printf("[INFO] Error obtaining token from extend token response, will re-login, %v", err)
+			p.Token = ""
+			return p.authenticate()
+		}
+	}
+	return nil
 }
