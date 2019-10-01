@@ -12,14 +12,18 @@ services:
         max-file: "5"
 
     environment:
-    - PRISMA_API_KEY=
-    - PRISMA_API_PASSWORD=
-#    - GRAPHITE_HOST=localhost
-#    - GRAPHITE_PREFIX=prefix
-#    - COMPLIANCE_PREFIX=compliance.
-#    - SCC_ORG_ID=123321123
-#    - SCC_SOURCES_REGEX=RedLock|Forseti
-#    - DEBUG=true
+    - GRAPHITE_HOST
+    - PRISMA_API_KEY
+    - PRISMA_API_PASSWORD
+    - GRAPHITE_PREFIX
+    - COMPLIANCE_PREFIX
+    - SCC_DELAY_PREFIX
+    - SCC_HEALTH_METRIC_NAME
+    - PRISMA_HEALTH_METRIC_NAME
+    - GOOGLE_APPLICATION_CREDENTIALS
+    - SCC_ORG_ID
+    - SCC_SOURCES_REGEX
+    - DEBUG
 
   # for testing metrics
   # use metrics.host=host.docker.internal under Docker for Mac\Windows

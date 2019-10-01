@@ -91,16 +91,13 @@ func main() {
 // return error in case of problems with connection initialisation
 func prepareCollectors(opts opts) (*collectors, error) {
 	var collectors = &collectors{}
-	var err error
 	if opts.PrismAPIKey != "" && opts.PrismAPIPassword != "" {
-		log.Print("[INFO] Initialising Prisma data collection")
-		collectors.prisma, err = api.NewPrisma(opts.PrismAPIKey, opts.PrismAPIPassword, opts.PrismAPIUrl)
-		if err != nil {
-			return nil, errors.Wrap(err, "can't connect to Prisma")
-		}
+		log.Printf("[INFO] Initialising Prisma data collection with API key %s", opts.PrismAPIKey)
+		collectors.prisma = &api.Prisma{Login: opts.PrismAPIKey, Password: opts.PrismAPIPassword, APIUrl: opts.PrismAPIUrl}
 	}
 	if opts.SCCOrgID != "" {
-		log.Print("[INFO] Initialising Google Security Command Center data collection")
+		var err error
+		log.Printf("[INFO] Initialising Google Security Command Center data collection for Organisation ID %s", opts.SCCOrgID)
 		collectors.sccSources, err = api.GetSCCSourcesByName(opts.SCCOrgID, opts.SCCSourcesRegex)
 		if err != nil {
 			return nil, errors.Wrap(err, "can't get SCC sources information")

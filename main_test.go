@@ -29,7 +29,9 @@ func TestPrepareCollectors(t *testing.T) {
 		collectors *collectors
 	}{
 		{collectors: &collectors{}},
-		{opts: opts{PrismAPIKey: "bad", PrismAPIPassword: "bad", PrismAPIUrl: "bad_host"}, err: true},
+		{collectors: &collectors{
+			prisma: &api.Prisma{Login: "bad", Password: "bad_pass", APIUrl: "bad_host"}},
+			opts: opts{PrismAPIKey: "bad", PrismAPIPassword: "bad_pass", PrismAPIUrl: "bad_host"}},
 		{opts: opts{SCCOrgID: "bad"}, err: true},
 	}
 	for i, x := range testDataset {
