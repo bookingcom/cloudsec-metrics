@@ -46,6 +46,10 @@ type ComplianceInfo struct {
 	TotalAssetsCount  int
 }
 
+// prismRenewTimeout defines how often auth token is renewed,
+// after 10 minutes it gets invalidated and new complete login is required
+const prismRenewTimeout = time.Minute * 3
+
 // GatherComplianceInfo get assets compliance information for last day
 // https://api.docs.prismacloud.io/reference#get-compliance-dashboard-list
 func (p *Prisma) GatherComplianceInfo() ([]ComplianceInfo, error) {
@@ -82,7 +86,7 @@ func (p *Prisma) doAPIRequest(method, url string, body io.Reader) ([]byte, error
 		return nil, errors.Wrap(err, "error creating request")
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if time.Since(p.tokenRenewTime) > time.Minute*3 {
+	if time.Since(p.tokenRenewTime) > prismRenewTimeout {
 		if err := p.authenticate(); err != nil {
 			return nil, errors.Wrap(err, "error getting auth token")
 		}
