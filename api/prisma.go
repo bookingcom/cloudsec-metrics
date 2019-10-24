@@ -40,10 +40,16 @@ type Prisma struct {
 type ComplianceInfo struct {
 	Name              string `json:"name"`
 	Description       string `json:"description"`
-	PoliciesCount     int    `json:"policiesAssignedCount"`
-	PassedAssetsCount int    `json:"resourcesPassed"`
-	FailedAssetsCount int    `json:"resourcesFailed"`
-	TotalAssetsCount  int
+	PoliciesCount     int    `json:"assignedPolicies"`
+	PassedAssetsCount int    `json:"passedResources"`
+	FailedAssetsCount int    `json:"failedResources"`
+	TotalAssetsCount  int    `json:"totalResources"`
+}
+
+// CompliancePosture stores overall posture statistics
+// and is required to unwrap the nested JSON scheme
+type CompliancePosture struct {
+	ComplianceDetails []ComplianceInfo `json:"complianceDetails"`
 }
 
 // prismRenewTimeout defines how often auth token is renewed,
@@ -51,23 +57,19 @@ type ComplianceInfo struct {
 const prismRenewTimeout = time.Minute * 3
 
 // GatherComplianceInfo get assets compliance information for last day
-// https://api.docs.prismacloud.io/reference#get-compliance-dashboard-list
+// https://api.docs.prismacloud.io/reference#compliance-posture
 func (p *Prisma) GatherComplianceInfo() ([]ComplianceInfo, error) {
-	data, err := p.doAPIRequest("GET", "/compliance/dashboard?timeType=to_now&timeUnit=day", nil)
+	data, err := p.doAPIRequest("GET", "/compliance/posture?timeType=to_now&timeUnit=day", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "error requesting assets information")
 	}
 
-	var c []ComplianceInfo
-	if err := json.Unmarshal(data, &c); err != nil {
+	var posture CompliancePosture
+	if err := json.Unmarshal(data, &posture); err != nil {
 		return nil, errors.Wrap(err, "error unmarshaling assets information")
 	}
 
-	for i := range c {
-		c[i].TotalAssetsCount = c[i].FailedAssetsCount + c[i].PassedAssetsCount
-	}
-
-	return c, nil
+	return posture.ComplianceDetails, nil
 }
 
 // GetAPIHealthStatus gets Prisma API health information and returns 1 on healthy response, 0 otherwise
