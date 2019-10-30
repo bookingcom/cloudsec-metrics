@@ -180,7 +180,7 @@ func TestPrisma_GatherComplianceInfo(t *testing.T) {
 	goodServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/compliance/posture", r.URL.Path)
 		assert.Equal(t, "GET", r.Method)
-		_, _ = fmt.Fprint(w, "{\"timestamp\": 1571919534777,\"complianceDetails\":[{\"name\":\"test_name\",\"description\":\"test description\",\"passedResources\":69,\"assignedPolicies\":66,\"failedResources\":99, \"totalResources\":168}]}")
+		_, _ = fmt.Fprint(w, `{"timestamp": 1571919534777,"complianceDetails":[{"name":"test_name","description":"test description","passedResources":69,"assignedPolicies":66,"failedResources":99, "totalResources":168}]}`)
 	}))
 	defer goodServer.Close()
 	badAnswerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
