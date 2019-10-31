@@ -15,33 +15,32 @@
 package graphite
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
-	"github.com/marpaia/graphite-golang"
 )
 
 // GenerateComplianceInfo returns metrics from given compliance info
-func GenerateComplianceInfo(timeNow int64, prefix string, ci []api.ComplianceInfo) []graphite.Metric {
-	var metrics []graphite.Metric
+func GenerateComplianceInfo(prefix string, ci []api.ComplianceInfo) []map[string]float64 {
+	var metrics []map[string]float64
 	for _, entry := range ci {
 		metricPrefix := prefix + escapeMetricName(entry.Name)
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".policies_total", strconv.Itoa(entry.PoliciesCount), timeNow))
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_passed", strconv.Itoa(entry.PassedAssetsCount), timeNow))
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_failed", strconv.Itoa(entry.FailedAssetsCount), timeNow))
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".assets_total", strconv.Itoa(entry.TotalAssetsCount), timeNow))
+		metrics = append(metrics, map[string]float64{
+			metricPrefix + ".policies_total": float64(entry.PoliciesCount),
+			metricPrefix + ".assets_passed":  float64(entry.PassedAssetsCount),
+			metricPrefix + ".assets_failed":  float64(entry.FailedAssetsCount),
+			metricPrefix + ".assets_total":   float64(entry.TotalAssetsCount),
+		})
 	}
 	return metrics
 }
 
 // GenerateSSCSourcesDelay returns metrics from given delay map
-func GenerateSSCSourcesDelay(timeNow int64, prefix string, delay map[string]time.Duration) []graphite.Metric {
-	var metrics []graphite.Metric
+func GenerateSSCSourcesDelay(prefix string, delay map[string]time.Duration) []map[string]float64 {
+	var metrics []map[string]float64
 	for name, duration := range delay {
 		metricPrefix := prefix + escapeMetricName(name)
-		metrics = append(metrics, graphite.NewMetric(metricPrefix+".seconds", fmt.Sprintf("%f", duration.Seconds()), timeNow))
+		metrics = append(metrics, map[string]float64{metricPrefix + ".seconds": duration.Seconds()})
 	}
 	return metrics
 }

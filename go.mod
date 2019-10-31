@@ -7,7 +7,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/marpaia/graphite-golang v0.0.0-20190519024811-caf161d2c2b1
+	github.com/jtaczanowski/go-graphite-client v0.1.1
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0
 	go.opencensus.io v0.22.1 // indirect

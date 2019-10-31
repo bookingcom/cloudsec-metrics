@@ -18,32 +18,33 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bookingcom/cloudsec-metrics/api"
-	"github.com/marpaia/graphite-golang"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bookingcom/cloudsec-metrics/api"
 )
 
 func TestGraphite(t *testing.T) {
-	assert.Nil(t, GenerateComplianceInfo(0, "", nil),
+	assert.Nil(t, GenerateComplianceInfo("", nil),
 		"Run with no metrics should return nil")
 	assert.Equal(t,
-		[]graphite.Metric{
-			{Name: "test_name_.policies_total", Value: "1", Timestamp: 0},
-			{Name: "test_name_.assets_passed", Value: "2", Timestamp: 0},
-			{Name: "test_name_.assets_failed", Value: "3", Timestamp: 0},
-			{Name: "test_name_.assets_total", Value: "4", Timestamp: 0}},
-		GenerateComplianceInfo(0, "", []api.ComplianceInfo{
+		[]map[string]float64{{
+			"test_name_.policies_total": 1,
+			"test_name_.assets_passed":  2,
+			"test_name_.assets_failed":  3,
+			"test_name_.assets_total":   4,
+		}},
+		GenerateComplianceInfo("", []api.ComplianceInfo{
 			{Name: "test{name}",
 				PoliciesCount:     1,
 				PassedAssetsCount: 2,
 				FailedAssetsCount: 3,
 				TotalAssetsCount:  4}}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
-	assert.Nil(t, GenerateSSCSourcesDelay(0, "", nil),
+	assert.Nil(t, GenerateSSCSourcesDelay("", nil),
 		"Run with no metrics should return nil")
 	assert.Equal(t,
-		[]graphite.Metric{{Name: "test.seconds", Value: "0.065000", Timestamp: 0}},
-		GenerateSSCSourcesDelay(0, "", map[string]time.Duration{"test": time.Millisecond * 65}),
+		[]map[string]float64{{"test.seconds": 0.065}},
+		GenerateSSCSourcesDelay("", map[string]time.Duration{"test": time.Millisecond * 65}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
 	assert.Equal(t, "_test_of_metric", escapeMetricName("(test)of/metric"))
 }

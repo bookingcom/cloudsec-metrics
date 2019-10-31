@@ -17,9 +17,10 @@ package main
 import (
 	"testing"
 
-	"github.com/bookingcom/cloudsec-metrics/api"
-	"github.com/marpaia/graphite-golang"
+	"github.com/jtaczanowski/go-graphite-client"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bookingcom/cloudsec-metrics/api"
 )
 
 func TestPrepareCollectors(t *testing.T) {
@@ -46,12 +47,8 @@ func TestPrepareCollectors(t *testing.T) {
 }
 
 func TestPrepareSenders(t *testing.T) {
-	s, err := prepareSenders(opts{})
-	assert.NoError(t, err)
+	s := prepareSenders(opts{})
 	assert.Equal(t, &senders{}, s, "No senders initialised without options provided")
-	s, err = prepareSenders(opts{GraphiteHost: "bad_host"})
-	assert.Error(t, err, "Bad Graphite hostname results in error")
-	assert.Nil(t, s, "Bad Graphite hostname results in no senders created")
 }
 
 func TestCollectMetrics(t *testing.T) {
@@ -62,6 +59,6 @@ func TestCollectMetrics(t *testing.T) {
 
 func TestSendMetrics(t *testing.T) {
 	m := metrics{complianceInfo: []api.ComplianceInfo{}}
-	sendMetrics(&m, &senders{graphite: &graphite.Graphite{}}, opts{})
+	sendMetrics(&m, &senders{graphite: &graphite.Client{}}, opts{})
 	assert.Equal(t, metrics{complianceInfo: []api.ComplianceInfo{}}, m, "Metrics unchanged after send function call")
 }
