@@ -24,15 +24,15 @@ import (
 )
 
 func TestGraphite(t *testing.T) {
-	assert.Nil(t, GenerateComplianceInfo("", nil),
+	assert.Equal(t, map[string]float64{}, GenerateComplianceInfo("", nil),
 		"Run with no metrics should return nil")
 	assert.Equal(t,
-		[]map[string]float64{{
+		map[string]float64{
 			"test_name_.policies_total": 1,
 			"test_name_.assets_passed":  2,
 			"test_name_.assets_failed":  3,
 			"test_name_.assets_total":   4,
-		}},
+		},
 		GenerateComplianceInfo("", []api.ComplianceInfo{
 			{Name: "test{name}",
 				PoliciesCount:     1,
@@ -40,10 +40,10 @@ func TestGraphite(t *testing.T) {
 				FailedAssetsCount: 3,
 				TotalAssetsCount:  4}}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
-	assert.Nil(t, GenerateSSCSourcesDelay("", nil),
+	assert.Equal(t, map[string]float64{}, GenerateSSCSourcesDelay("", nil),
 		"Run with no metrics should return nil")
 	assert.Equal(t,
-		[]map[string]float64{{"test.seconds": 0.065}},
+		map[string]float64{"test.seconds": 0.065},
 		GenerateSSCSourcesDelay("", map[string]time.Duration{"test": time.Millisecond * 65}),
 		"Single metric send to empty Graphite should do nothing and return no errors")
 	assert.Equal(t, "_test_of_metric", escapeMetricName("(test)of/metric"))

@@ -134,13 +134,17 @@ func collectMetrics(metrics *metrics, collectors *collectors, googleHealthDashbo
 // sendMetrics sends metrics to initialised senders
 func sendMetrics(metrics *metrics, senders *senders, opts opts) {
 	if senders.graphite != nil {
-		var graphiteMetrics []map[string]float64
+		graphiteMetrics := map[string]float64{}
 		if metrics.complianceInfo != nil {
-			graphiteMetrics = append(graphiteMetrics, graphite.GenerateComplianceInfo(opts.CompliancePrefix, metrics.complianceInfo)...)
-			graphiteMetrics = append(graphiteMetrics, map[string]float64{opts.PrismaHealthMetricName: float64(metrics.prismaHealthStatus)})
+			for k, v := range graphite.GenerateComplianceInfo(opts.CompliancePrefix, metrics.complianceInfo) {
+				graphiteMetrics[k] = v
+			}
+			graphiteMetrics[opts.PrismaHealthMetricName] = float64(metrics.prismaHealthStatus)
 		}
-		graphiteMetrics = append(graphiteMetrics, graphite.GenerateSSCSourcesDelay(opts.SCCDelayPrefix, metrics.googleSourcesDelay)...)
-		graphiteMetrics = append(graphiteMetrics, map[string]float64{opts.SCCHealthMetricName: float64(metrics.googleSCCHealthStatus)})
+		for k, v := range graphite.GenerateSSCSourcesDelay(opts.SCCDelayPrefix, metrics.googleSourcesDelay) {
+			graphiteMetrics[k] = v
+		}
+		graphiteMetrics[opts.SCCHealthMetricName] = float64(metrics.googleSCCHealthStatus)
 		if err := senders.graphite.SendData(graphiteMetrics); err != nil {
 			log.Printf("[ERROR] Can't send metrics to Graphite, %v", err)
 		}
