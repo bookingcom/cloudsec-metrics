@@ -17,14 +17,14 @@ package main
 import (
 	"log"
 	"os"
-	"strconv"
 	"time"
+
+	"github.com/jessevdk/go-flags"
+	g "github.com/jtaczanowski/go-graphite-client"
+	"github.com/pkg/errors"
 
 	"github.com/bookingcom/cloudsec-metrics/api"
 	"github.com/bookingcom/cloudsec-metrics/graphite"
-	"github.com/jessevdk/go-flags"
-	g "github.com/marpaia/graphite-golang"
-	"github.com/pkg/errors"
 )
 
 type opts struct {
@@ -50,7 +50,7 @@ type collectors struct {
 }
 
 type senders struct {
-	graphite *g.Graphite
+	graphite *g.Client
 }
 
 type metrics struct {
@@ -76,10 +76,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Can't initialise collectors, %v", err)
 	}
-	senders, err := prepareSenders(opts)
-	if err != nil {
-		log.Fatalf("[ERROR] Can't initialise senders, %v", err)
-	}
+	senders := prepareSenders(opts)
 
 	for ticker := time.NewTicker(opts.CollectPeriod); true; <-ticker.C {
 		collectMetrics(metrics, collectors, "https://status.cloud.google.com/incidents.json")
@@ -107,16 +104,12 @@ func prepareCollectors(opts opts) (*collectors, error) {
 }
 
 // create and return a pointer to senders
-func prepareSenders(opts opts) (*senders, error) {
-	var err error
+func prepareSenders(opts opts) *senders {
 	var senders = &senders{}
 	if opts.GraphiteHost != "" {
-		if senders.graphite, err = g.GraphiteFactory("tcp", opts.GraphiteHost, opts.GraphitePort, opts.GraphitePrefix); err != nil {
-			return nil, errors.Wrap(err, "can't create Graphite")
-		}
-		senders.graphite.DisableLog = true
+		senders.graphite = g.NewClient(opts.GraphiteHost, opts.GraphitePort, opts.GraphitePrefix, "tcp")
 	}
-	return senders, nil
+	return senders
 }
 
 // collectMetrics collects metrics into referenced metrics object using provided collectors
@@ -141,15 +134,14 @@ func collectMetrics(metrics *metrics, collectors *collectors, googleHealthDashbo
 // sendMetrics sends metrics to initialised senders
 func sendMetrics(metrics *metrics, senders *senders, opts opts) {
 	if senders.graphite != nil {
-		var graphiteMetrics []g.Metric
-		timeNow := time.Now().Unix()
+		var graphiteMetrics []map[string]float64
 		if metrics.complianceInfo != nil {
-			graphiteMetrics = append(graphiteMetrics, graphite.GenerateComplianceInfo(timeNow, opts.CompliancePrefix, metrics.complianceInfo)...)
-			graphiteMetrics = append(graphiteMetrics, g.NewMetric(opts.PrismaHealthMetricName, strconv.Itoa(metrics.prismaHealthStatus), timeNow))
+			graphiteMetrics = append(graphiteMetrics, graphite.GenerateComplianceInfo(opts.CompliancePrefix, metrics.complianceInfo)...)
+			graphiteMetrics = append(graphiteMetrics, map[string]float64{opts.PrismaHealthMetricName: float64(metrics.prismaHealthStatus)})
 		}
-		graphiteMetrics = append(graphiteMetrics, graphite.GenerateSSCSourcesDelay(timeNow, opts.SCCDelayPrefix, metrics.googleSourcesDelay)...)
-		graphiteMetrics = append(graphiteMetrics, g.NewMetric(opts.SCCHealthMetricName, strconv.Itoa(metrics.googleSCCHealthStatus), timeNow))
-		if err := senders.graphite.SendMetrics(graphiteMetrics); err != nil {
+		graphiteMetrics = append(graphiteMetrics, graphite.GenerateSSCSourcesDelay(opts.SCCDelayPrefix, metrics.googleSourcesDelay)...)
+		graphiteMetrics = append(graphiteMetrics, map[string]float64{opts.SCCHealthMetricName: float64(metrics.googleSCCHealthStatus)})
+		if err := senders.graphite.SendData(graphiteMetrics); err != nil {
 			log.Printf("[ERROR] Can't send metrics to Graphite, %v", err)
 		}
 	}
