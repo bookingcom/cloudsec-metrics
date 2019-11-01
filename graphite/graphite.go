@@ -21,26 +21,24 @@ import (
 )
 
 // GenerateComplianceInfo returns metrics from given compliance info
-func GenerateComplianceInfo(prefix string, ci []api.ComplianceInfo) []map[string]float64 {
-	var metrics []map[string]float64
+func GenerateComplianceInfo(prefix string, ci []api.ComplianceInfo) map[string]float64 {
+	metrics := map[string]float64{}
 	for _, entry := range ci {
 		metricPrefix := prefix + escapeMetricName(entry.Name)
-		metrics = append(metrics, map[string]float64{
-			metricPrefix + ".policies_total": float64(entry.PoliciesCount),
-			metricPrefix + ".assets_passed":  float64(entry.PassedAssetsCount),
-			metricPrefix + ".assets_failed":  float64(entry.FailedAssetsCount),
-			metricPrefix + ".assets_total":   float64(entry.TotalAssetsCount),
-		})
+		metrics[metricPrefix+".policies_total"] = float64(entry.PoliciesCount)
+		metrics[metricPrefix+".assets_passed"] = float64(entry.PassedAssetsCount)
+		metrics[metricPrefix+".assets_failed"] = float64(entry.FailedAssetsCount)
+		metrics[metricPrefix+".assets_total"] = float64(entry.TotalAssetsCount)
 	}
 	return metrics
 }
 
 // GenerateSSCSourcesDelay returns metrics from given delay map
-func GenerateSSCSourcesDelay(prefix string, delay map[string]time.Duration) []map[string]float64 {
-	var metrics []map[string]float64
+func GenerateSSCSourcesDelay(prefix string, delay map[string]time.Duration) map[string]float64 {
+	metrics := map[string]float64{}
 	for name, duration := range delay {
 		metricPrefix := prefix + escapeMetricName(name)
-		metrics = append(metrics, map[string]float64{metricPrefix + ".seconds": duration.Seconds()})
+		metrics[metricPrefix+".seconds"] = duration.Seconds()
 	}
 	return metrics
 }
