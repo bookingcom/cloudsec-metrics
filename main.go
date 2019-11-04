@@ -117,7 +117,7 @@ func collectMetrics(metrics *metrics, collectors *collectors, googleHealthDashbo
 	var err error
 	if collectors.prisma != nil {
 		if metrics.complianceInfo, err = collectors.prisma.GatherComplianceInfo(); err != nil {
-			log.Printf("[ERROR] Can't request complience information, %v", err)
+			log.Printf("[ERROR] Can't request compliance information, %v", err)
 		}
 		metrics.prismaHealthStatus = collectors.prisma.GetAPIHealthStatus()
 	}
