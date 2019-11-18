@@ -1,4 +1,4 @@
-# Cloud Security metrics collector [![Go Report Card](https://goreportcard.com/badge/github.com/bookingcom/cloudsec-metrics)](https://goreportcard.com/report/github.com/bookingcom/cloudsec-metrics)
+# Cloud Security metrics collector [![Build Status](https://github.com/bookingcom/cloudsec-metrics/workflows/build/badge.svg)](https://github.com/bookingcom/cloudsec-metrics/actions) [![Go Report Card](https://goreportcard.com/badge/github.com/bookingcom/cloudsec-metrics)](https://goreportcard.com/report/github.com/bookingcom/cloudsec-metrics)
 
 Security-related metrics collector and exporter.
 

@@ -1,13 +1,3 @@
-# Lint check
-FROM golangci/golangci-lint
-
-WORKDIR /test
-ADD . .
-
-RUN golangci-lint run --disable-all --deadline=300s --enable=vet --enable=vetshadow --enable=golint \
-    --enable=staticcheck --enable=ineffassign --enable=goconst --enable=errcheck --enable=unconvert \
-    --enable=deadcode --enable=gosimple ./...
-
 # Build
 FROM golang:1 as build
 
