@@ -40,4 +40,4 @@ jobs:
     #        COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: build docker image
-      run: docker-compose build .
+      run: docker-compose build
