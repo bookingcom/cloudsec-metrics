@@ -90,7 +90,7 @@ func prepareCollectors(opts opts) (*collectors, error) {
 	var collectors = &collectors{}
 	if opts.PrismAPIKey != "" && opts.PrismAPIPassword != "" {
 		log.Printf("[INFO] Initialising Prisma data collection with API key %s", opts.PrismAPIKey)
-		collectors.prisma = &api.Prisma{Login: opts.PrismAPIKey, Password: opts.PrismAPIPassword, APIUrl: opts.PrismAPIUrl}
+		collectors.prisma = api.NewPrisma(opts.PrismAPIKey, opts.PrismAPIPassword, opts.PrismAPIUrl)
 	}
 	if opts.SCCOrgID != "" {
 		var err error

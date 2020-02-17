@@ -8,7 +8,8 @@ require (
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jtaczanowski/go-graphite-client v1.0.0
-	github.com/pkg/errors v0.8.1
+	github.com/paskal/go-prisma v0.0.4
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.4.0
 	go.opencensus.io v0.22.1 // indirect
 	golang.org/x/net v0.0.0-20190916140828-c8589233b77d // indirect
