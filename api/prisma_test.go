@@ -24,12 +24,12 @@ import (
 
 func TestPrisma_GatherComplianceInfo(t *testing.T) {
 	var testAPIRequestsDataset = []struct {
-		serverErr string
+		serverErr error
 		error     string
 		answer    []byte
 		asset     []ComplianceInfo
 	}{
-		{serverErr: "mock error",
+		{serverErr: errors.New("mock error"),
 			error: "error requesting assets information: mock error"},
 		{answer: []byte(`{"timestamp": 1571919534777,"complianceDetails":[{"name":"test_name","description":"test description","passedResources":69,"assignedPolicies":66,"failedResources":99, "totalResources":168}]}`),
 			asset: []ComplianceInfo{{"test_name", "test description", 66, 69, 99, 69 + 99}}},
@@ -55,10 +55,10 @@ func TestPrisma_GatherComplianceInfo(t *testing.T) {
 
 func TestPrisma_GetAPIHealthStatus(t *testing.T) {
 	var testAPIRequestsDataset = []struct {
-		err    string
+		err    error
 		status int
 	}{
-		{err: "mock problem"},
+		{err: errors.New("mock problem")},
 		{status: 1},
 	}
 
@@ -77,14 +77,11 @@ type mockClient struct {
 	method string
 	url    string
 	answer []byte
-	err    string
+	err    error
 }
 
 func (m *mockClient) DoAPIRequest(method, url string, _ io.Reader) ([]byte, error) {
 	assert.Equal(m.t, m.url, url)
 	assert.Equal(m.t, m.method, method)
-	if m.err != "" {
-		return nil, errors.New(m.err)
-	}
-	return m.answer, nil
+	return m.answer, m.err
 }
