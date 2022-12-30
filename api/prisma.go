@@ -28,7 +28,7 @@ type Prisma struct {
 }
 
 type apiCaller interface {
-	DoAPIRequest(method, url string, body io.Reader) ([]byte, error)
+	Call(method, url string, body io.Reader) ([]byte, error)
 }
 
 // ComplianceInfo store assets compliance information for single policy
@@ -57,7 +57,7 @@ func NewPrisma(username, password, apiURL string) *Prisma {
 // GatherComplianceInfo get assets compliance information for last day
 // https://api.docs.prismacloud.io/reference#compliance-posture
 func (p *Prisma) GatherComplianceInfo() ([]ComplianceInfo, error) {
-	data, err := p.api.DoAPIRequest("GET", "/compliance/posture?timeType=to_now&timeUnit=day", nil)
+	data, err := p.api.Call("GET", "/compliance/posture?timeType=to_now&timeUnit=day", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "error requesting assets information")
 	}
@@ -73,7 +73,7 @@ func (p *Prisma) GatherComplianceInfo() ([]ComplianceInfo, error) {
 // GetAPIHealthStatus gets Prisma API health information and returns 1 on healthy response, 0 otherwise
 // https://api.docs.prismacloud.io/reference#health-check
 func (p *Prisma) GetAPIHealthStatus() int {
-	if _, err := p.api.DoAPIRequest("GET", "/check", nil); err != nil {
+	if _, err := p.api.Call("GET", "/check", nil); err != nil {
 		return 0
 	}
 	return 1

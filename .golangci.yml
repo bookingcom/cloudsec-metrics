@@ -1,36 +1,32 @@
 linters:
   enable:
   - bodyclose
-  - deadcode
   - depguard
   - dogsled
   - dupl
   - errcheck
+  - exportloopref
+  - gochecknoglobals
+  - gochecknoinits
   - gochecknoinits
   - goconst
   - gocritic
   - gocyclo
   - gofmt
   - goimports
-  - golint
   - goprintffuncname
-  - gochecknoglobals
-  - gochecknoinits
   - gosec
   - gosimple
   - govet
   - ineffassign
-  - interfacer
   - misspell
   - nakedret
+  - revive
   - rowserrcheck
-  - scopelint
   - staticcheck
-  - structcheck
   - stylecheck
   - typecheck
   - unconvert
   - unparam
   - unused
-  - varcheck
   - whitespace

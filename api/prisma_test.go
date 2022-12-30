@@ -80,7 +80,7 @@ type mockClient struct {
 	err    error
 }
 
-func (m *mockClient) DoAPIRequest(method, url string, _ io.Reader) ([]byte, error) {
+func (m *mockClient) Call(method, url string, _ io.Reader) ([]byte, error) {
 	assert.Equal(m.t, m.url, url)
 	assert.Equal(m.t, m.method, method)
 	return m.answer, m.err
