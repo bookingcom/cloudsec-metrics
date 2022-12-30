@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"regexp"
@@ -53,7 +53,7 @@ func GetSCCHealthStatus(url string) int {
 	if err != nil {
 		return 0
 	}
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	defer response.Body.Close()
 	if err != nil {
 		return 0
