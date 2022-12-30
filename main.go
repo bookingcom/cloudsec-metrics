@@ -15,16 +15,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
 
-	"github.com/jessevdk/go-flags"
-	g "github.com/jtaczanowski/go-graphite-client"
-	"github.com/pkg/errors"
-
 	"github.com/bookingcom/cloudsec-metrics/api"
 	"github.com/bookingcom/cloudsec-metrics/graphite"
+	"github.com/jessevdk/go-flags"
+	g "github.com/jtaczanowski/go-graphite-client"
 )
 
 type opts struct {
@@ -97,7 +96,7 @@ func prepareCollectors(opts opts) (*collectors, error) {
 		log.Printf("[INFO] Initialising Google Security Command Center data collection for Organisation ID %s", opts.SCCOrgID)
 		collectors.sccSources, err = api.GetSCCSourcesByName(opts.SCCOrgID, opts.SCCSourcesRegex)
 		if err != nil {
-			return nil, errors.Wrap(err, "can't get SCC sources information")
+			return nil, fmt.Errorf("can't get SCC sources information: %w", err)
 		}
 	}
 	return collectors, nil

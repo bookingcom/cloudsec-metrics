@@ -15,10 +15,10 @@
 package api
 
 import (
+	"fmt"
 	"io"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +29,7 @@ func TestPrisma_GatherComplianceInfo(t *testing.T) {
 		answer    []byte
 		asset     []ComplianceInfo
 	}{
-		{serverErr: errors.New("mock error"),
+		{serverErr: fmt.Errorf("mock error"),
 			error: "error requesting assets information: mock error"},
 		{answer: []byte(`{"timestamp": 1571919534777,"complianceDetails":[{"name":"test_name","description":"test description","passedResources":69,"assignedPolicies":66,"failedResources":99, "totalResources":168}]}`),
 			asset: []ComplianceInfo{{"test_name", "test description", 66, 69, 99, 69 + 99}}},
@@ -58,7 +58,7 @@ func TestPrisma_GetAPIHealthStatus(t *testing.T) {
 		err    error
 		status int
 	}{
-		{err: errors.New("mock problem")},
+		{err: fmt.Errorf("mock problem")},
 		{status: 1},
 	}
 

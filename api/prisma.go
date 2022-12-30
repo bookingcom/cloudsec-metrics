@@ -16,10 +16,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/paskal/go-prisma"
-	"github.com/pkg/errors"
 )
 
 // Prisma contain credentials for API access
@@ -59,12 +59,12 @@ func NewPrisma(username, password, apiURL string) *Prisma {
 func (p *Prisma) GatherComplianceInfo() ([]ComplianceInfo, error) {
 	data, err := p.api.Call("GET", "/compliance/posture?timeType=to_now&timeUnit=day", nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "error requesting assets information")
+		return nil, fmt.Errorf("error requesting assets information: %w", err)
 	}
 
 	var posture CompliancePosture
 	if err := json.Unmarshal(data, &posture); err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling assets information")
+		return nil, fmt.Errorf("error unmarshaling assets information: %w", err)
 	}
 
 	return posture.ComplianceDetails, nil

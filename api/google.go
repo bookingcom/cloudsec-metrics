@@ -26,7 +26,6 @@ import (
 
 	securitycenter "cloud.google.com/go/securitycenter/apiv1"
 	"cloud.google.com/go/securitycenter/apiv1/securitycenterpb"
-	"github.com/pkg/errors"
 	"google.golang.org/api/iterator"
 )
 
@@ -81,14 +80,14 @@ func GetSCCHealthStatus(url string) int {
 func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, error) {
 	regex, err := regexp.Compile(nameRegex)
 	if err != nil {
-		return nil, errors.Wrap(err, "error compiling nameRegex")
+		return nil, fmt.Errorf("error compiling nameRegex: %w", err)
 	}
 	// Instantiate a context and a security service client to make API calls.
 	ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
 	defer cancel()
 	client, err := securitycenter.NewClient(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "securitycenter.NewClient")
+		return nil, fmt.Errorf("securitycenter.NewClient: %w", err)
 	}
 	defer client.Close() // Closing the client safely cleans up background resources.
 
@@ -103,7 +102,7 @@ func GetSCCSourcesByName(orgID string, nameRegex string) (map[string]string, err
 			break
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, "sources iterator problem")
+			return nil, fmt.Errorf("sources iterator problem: %w", err)
 		}
 
 		if match := regex.MatchString(source.DisplayName); match {
@@ -121,7 +120,7 @@ func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration,
 	defer cancel()
 	client, err := securitycenter.NewClient(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "securitycenter.NewClient")
+		return nil, fmt.Errorf("securitycenter.NewClient: %w", err)
 	}
 	defer client.Close() // Closing the client safely cleans up background resources.
 
@@ -139,7 +138,7 @@ func GetSCCLatestEventTime(sources map[string]string) (map[string]time.Duration,
 			continue
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, "events iterator problem")
+			return nil, fmt.Errorf("events iterator problem: %w", err)
 		}
 		finding := findingsResult.Finding
 		result[name] = time.Since(time.Unix(finding.EventTime.Seconds, int64(finding.EventTime.Nanos)))
