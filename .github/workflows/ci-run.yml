@@ -21,10 +21,11 @@ jobs:
 
     - name: build and test
       run: go test -race -timeout=60s -covermode=atomic -coverprofile=$GITHUB_WORKSPACE/profile.cov ./...
-    - name: install golangci-lint and goveralls
-      run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $GITHUB_WORKSPACE v1.50.1
-    - name: run linters
-      run: $GITHUB_WORKSPACE/golangci-lint run ./... ;
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
 
     - name: build docker image
       run: docker-compose build
