@@ -52,11 +52,11 @@ func TestGetSCCHealthStatus(t *testing.T) {
 		w.Header().Set("Content-Length", "1")
 	}))
 	defer badResponseServer.Close()
-	serverStatusUnauthorized := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	serverStatusUnauthorized := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
 	defer serverStatusUnauthorized.Close()
-	serverStatusNotFound := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	serverStatusNotFound := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer serverStatusNotFound.Close()
